@@ -45,10 +45,10 @@ void cast(U *dst, T const *src, size_t n) {
     }
 
     n /= ITEMS_PER_THREAD;
-    auto block = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-    auto threads = (n + block - 1) / block;
+    auto grid = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    auto block = (n + grid - 1) / grid;
     n *= ITEMS_PER_THREAD;
-    cast_kernel<<<block, threads>>>(dst, src, n);
+    cast_kernel<<<grid, block>>>(dst, src, n);
 }
 
 #endif// __CAST_CUH__

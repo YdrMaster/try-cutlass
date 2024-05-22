@@ -1,4 +1,7 @@
-﻿#include <cute/tensor.hpp>
+﻿#ifndef __GEMM_SIMPLE_CUH__
+#define __GEMM_SIMPLE_CUH__
+
+#include <cute/tensor.hpp>
 
 using namespace cute;
 
@@ -66,3 +69,5 @@ void gemm_simple(
     gemm_simple_kernel<T, TM_K, TN_K, TK_K, MMA>
         <<<grid, block, 0, stream>>>(c, a, b, m, n, k);
 }
+
+#endif// __GEMM_SIMPLE_CUH__

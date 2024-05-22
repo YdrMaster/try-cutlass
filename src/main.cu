@@ -1,4 +1,5 @@
 #include "cast.cuh"
+#include "compare.cuh"
 #include "cublas.cuh"
 #include "gemm_simple.cuh"
 #include "rng.cuh"
@@ -25,32 +26,32 @@ void test(size_t m, size_t n, size_t k, size_t repeat) {
     CUDA_CALL(cudaEventCreate(&start));
     CUDA_CALL(cudaEventCreate(&end));
 
-    float cublas_time = 0.0;
+    float cublas_time = 0, our_time = 0;
+
     Cublas cublas(stream);
     for (size_t i = 0; i < repeat; i++) {
+        float ms;
+
         CUDA_CALL(cudaEventRecord(start, stream));
         cublas.gemm(c_cublas, a, b, m, n, k);
         CUDA_CALL(cudaEventRecord(end, stream));
 
         CUDA_CALL(cudaEventSynchronize(end));
-        float ms;
         CUDA_CALL(cudaEventElapsedTime(&ms, start, end));
         cublas_time += ms;
-    }
-    printf("cublas time: %.3f ms\n", cublas_time / repeat);
 
-    float our_time = 0.0;
-    for (size_t i = 0; i < repeat; i++) {
         CUDA_CALL(cudaEventRecord(start, stream));
         gemm_simple<half, 128, 128, 32>(c_our, a, b, m, n, k, stream);
         CUDA_CALL(cudaEventRecord(end, stream));
 
         CUDA_CALL(cudaEventSynchronize(end));
-        float ms;
         CUDA_CALL(cudaEventElapsedTime(&ms, start, end));
         our_time += ms;
     }
+    printf("cublas time: %.3f ms\n", cublas_time / repeat);
     printf("our time: %.3f ms\n", our_time / repeat);
+
+    compare(c_cublas, c_our, 0.1, m * n);
 
     CUDA_CALL(cudaEventDestroy(start));
     CUDA_CALL(cudaEventDestroy(end));
@@ -58,6 +59,6 @@ void test(size_t m, size_t n, size_t k, size_t repeat) {
 }
 
 int main(int argc, char **argv) {
-    test(81920, 256, 256, 100);
+    test(10240, 10240, 10240, 100);
     return EXIT_SUCCESS;
 }
