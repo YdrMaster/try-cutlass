@@ -21,5 +21,5 @@ xmake
 ## 运行
 
 ```xmake
-xmake run
+xmake run gemm 8192 8192 8192
 ```

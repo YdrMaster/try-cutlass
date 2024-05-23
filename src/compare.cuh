@@ -24,12 +24,12 @@ static __global__ void gpu_compare_kernel(
     float v1 = y[idx];
 
     float diff = fabs(v0 - v1);
+    // for positive floating point, there int representation is in the same order.
+    int int_diff = *((int *) (&diff));
+    atomicMax((int *) &result->max_error, int_diff);
+
     if (diff > threshold) {
         atomicAdd(&result->count, 1);
-
-        // for positive floating point, there int representation is in the same order.
-        int int_diff = *((int *) (&diff));
-        atomicMax((int *) &result->max_error, int_diff);
     }
 }
 

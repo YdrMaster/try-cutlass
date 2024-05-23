@@ -1,7 +1,7 @@
 add_rules("mode.debug", "mode.release")
 set_encodings("utf-8")
 
-target("hello")
+target("gemm")
     set_kind("binary")
     set_languages("c99","cxx17")
     add_cuflags("-arch=sm_80", "--expt-relaxed-constexpr")

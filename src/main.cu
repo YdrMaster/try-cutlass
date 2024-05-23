@@ -41,7 +41,7 @@ void test(size_t m, size_t n, size_t k, size_t repeat) {
         cublas_time += ms;
 
         CUDA_CALL(cudaEventRecord(start, stream));
-        gemm_simple<half, 128, 128, 32>(c_our, a, b, m, n, k, stream);
+        gemm_simple(c_our, a, b, m, n, k, stream);
         CUDA_CALL(cudaEventRecord(end, stream));
 
         CUDA_CALL(cudaEventSynchronize(end));
@@ -51,7 +51,7 @@ void test(size_t m, size_t n, size_t k, size_t repeat) {
     printf("cublas time: %.3f ms\n", cublas_time / repeat);
     printf("our time: %.3f ms\n", our_time / repeat);
 
-    compare(c_cublas, c_our, 0.1, m * n);
+    compare(c_cublas, c_our, 1e-3, m * n);
 
     CUDA_CALL(cudaEventDestroy(start));
     CUDA_CALL(cudaEventDestroy(end));
@@ -59,6 +59,14 @@ void test(size_t m, size_t n, size_t k, size_t repeat) {
 }
 
 int main(int argc, char **argv) {
-    test(10240, 10240, 10240, 100);
+    if (argc != 4) {
+        printf("Usage: %s m n k\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    size_t m = atoi(argv[1]);
+    size_t n = atoi(argv[2]);
+    size_t k = atoi(argv[3]);
+    test(m, n, k, 100);
     return EXIT_SUCCESS;
 }

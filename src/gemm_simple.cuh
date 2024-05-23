@@ -47,26 +47,22 @@ static __global__ void gemm_simple_kernel(
     cute::copy(tCrC, tCgC);
 }
 
-template<class T, size_t TM_K, size_t TN_K, size_t TK_K>
 void gemm_simple(
     half *c,
     half const *a,
     half const *b,
     size_t m, size_t n, size_t k,
     cudaStream_t stream) {
+    constexpr static size_t
+        TM_K = 128,
+        TN_K = 128,
+        TK_K = 32;
 
-    using mma_op = SM80_16x8x16_F16F16F16F16_TN;
-    using mma_traits = MMA_Traits<mma_op>;
-    using mma_atom = MMA_Atom<mma_traits>;
-
-    using MMA = decltype(make_tiled_mma(
-        mma_atom{},
-        make_layout(Shape<_2, _2, _1>{}),
-        make_layout(Shape<_1, _2, _1>{})));
-    dim3 block(size(MMA{}));
+    auto mma = make_tiled_mma(SM80_16x8x8_F16F16F16F16_TN{});
+    dim3 block(size(mma));
     dim3 grid(n / TN_K, m / TM_K);
 
-    gemm_simple_kernel<T, TM_K, TN_K, TK_K, MMA>
+    gemm_simple_kernel<half, TM_K, TN_K, TK_K, decltype(mma)>
         <<<grid, block, 0, stream>>>(c, a, b, m, n, k);
 }
 
