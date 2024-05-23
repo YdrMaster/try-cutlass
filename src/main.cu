@@ -53,6 +53,55 @@ void test(size_t m, size_t n, size_t k, size_t repeat) {
 
     compare(c_cublas, c_our, 1e-3, m * n);
 
+    {
+        std::vector<half> host(m * k);
+        CUDA_CALL(cudaMemcpy(host.data(), a, m * k * sizeof(half), cudaMemcpyDeviceToHost));
+        CUDA_CALL(cudaFree(a));
+        printf("A %ldx%ld\n", m, k);
+        // for (size_t i = 0; i < m; i++) {
+        //     for (size_t j = 0; j < k; j++) {
+        //         printf("%.3f ", (float) host[i * k + j]);
+        //     }
+        //     printf("\n");
+        // }
+    }
+    {
+        std::vector<half> host(k * n);
+        CUDA_CALL(cudaMemcpy(host.data(), b, k * n * sizeof(half), cudaMemcpyDeviceToHost));
+        CUDA_CALL(cudaFree(b));
+        printf("B %ldx%ld\n", k, n);
+        // for (size_t i = 0; i < k; i++) {
+        //     for (size_t j = 0; j < n; j++) {
+        //         printf("%.3f ", (float) host[i + j * k]);
+        //     }
+        //     printf("\n");
+        // }
+    }
+    {
+        std::vector<half> host(m * n);
+        CUDA_CALL(cudaMemcpy(host.data(), c_cublas, m * n * sizeof(half), cudaMemcpyDeviceToHost));
+        CUDA_CALL(cudaFree(c_cublas));
+        printf("C CUBLAS %ldx%ld\n", m, n);
+        // for (size_t i = 0; i < m; i++) {
+        //     for (size_t j = 0; j < n; j++) {
+        //         printf("%.3f ", (float) host[i * n + j]);
+        //     }
+        //     printf("\n");
+        // }
+    }
+    {
+        std::vector<half> host(m * n);
+        CUDA_CALL(cudaMemcpy(host.data(), c_our, m * n * sizeof(half), cudaMemcpyDeviceToHost));
+        CUDA_CALL(cudaFree(c_our));
+        printf("C CUTLASS %ldx%ld\n", m, n);
+        // for (size_t i = 0; i < m; i++) {
+        //     for (size_t j = 0; j < n; j++) {
+        //         printf("%.3f ", (float) host[i * n + j]);
+        //     }
+        //     printf("\n");
+        // }
+    }
+
     CUDA_CALL(cudaEventDestroy(start));
     CUDA_CALL(cudaEventDestroy(end));
     CUDA_CALL(cudaStreamDestroy(stream));

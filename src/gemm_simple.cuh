@@ -33,15 +33,13 @@ static __global__ void gemm_simple_kernel(
     auto tArA = thr_mma.partition_fragment_A(a_local(_, _, 0));// (MMA, MMA_M, MMA_K)
     auto tBrB = thr_mma.partition_fragment_B(b_local(_, _, 0));// (MMA, MMA_N, MMA_K)
 
+    // auto tCrC = make_tensor<float>(tCrC_.layout());
     clear(tCrC);
-
-    auto num_tile_k = size<2>(a_local);
-#pragma unroll 1
+    int num_tile_k = size<2>(a_local);
     for (int itile = 0; itile < num_tile_k; ++itile) {
         cute::copy(tAgA(_, _, _, itile), tArA);
         cute::copy(tBgB(_, _, _, itile), tBrB);
-
-        cute::gemm(tiled_mma, tCrC, tArA, tBrB, tCrC);
+        cute::gemm(tiled_mma, tArA, tBrB, tCrC);
     }
 
     cute::copy(tCrC, tCgC);
@@ -58,9 +56,11 @@ void gemm_simple(
         TN_K = 128,
         TK_K = 32;
 
-    auto mma = make_tiled_mma(SM80_16x8x8_F16F16F16F16_TN{});
-    dim3 block(size(mma));
+    auto mma = make_tiled_mma(SM80_16x8x16_F32F16F16F32_TN{});
     dim3 grid(n / TN_K, m / TM_K);
+    dim3 block(size(mma));
+
+    printf("grid: %d, %d, block: %d\n", grid.x, grid.y, block.x);
 
     gemm_simple_kernel<half, TM_K, TN_K, TK_K, decltype(mma)>
         <<<grid, block, 0, stream>>>(c, a, b, m, n, k);
